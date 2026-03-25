@@ -8,6 +8,7 @@ module com.example.jsonschemagenerator {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.bootstrapfx.core;
     requires eu.hansolo.tilesfx;
+    requires com.fasterxml.jackson.databind;
 
     opens com.example.jsonschemagenerator to javafx.fxml;
     exports com.example.jsonschemagenerator;
