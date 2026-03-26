@@ -1,5 +1,6 @@
 package com.example.jsonschemagenerator.generator;
 
+import com.example.jsonschemagenerator.generator.dateValidator.DateValidator;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,9 +10,11 @@ public class SchemaGenerator {
 
     private static final String SCHEMA_VERSION = "https://json-schema.org/draft/2020-12/schema";
     private final ObjectMapper objectMapper;
+    private final DateValidator dateValidator;
 
     public SchemaGenerator(){
         this.objectMapper = new ObjectMapper();
+        this.dateValidator = new DateValidator();
     }
 
     public ObjectNode generate(JsonNode node, String title){
@@ -41,7 +44,7 @@ public class SchemaGenerator {
 
         switch (node.getNodeType()){
             case STRING:
-                schema.put("type","string");
+                setStringDetectFormat(node, schema);
                 break;
             case NUMBER:
                 SetTypeNumber(node,schema);
@@ -59,7 +62,17 @@ public class SchemaGenerator {
                 setTypeArray(node, schema);
                 break;
 
+
         }
+    }
+
+    private void setStringDetectFormat(JsonNode node, ObjectNode schema){
+
+        schema.put("type","string");
+        String value = node.textValue();
+
+       dateValidator.detectFormat(value).ifPresent(format -> schema.put("format", format));
+
     }
 
     private void setTypeObject(JsonNode node, ObjectNode schema){
