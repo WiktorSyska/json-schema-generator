@@ -1,5 +1,6 @@
 package com.example.jsonschemagenerator.generator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -27,9 +28,13 @@ public class SchemaGenerator {
 
         setType(node, schema);
 
-
-        System.out.println(schema);
         return schema;
+    }
+
+    public String generatePretty(JsonNode node, String title) throws JsonProcessingException {
+        ObjectNode schema = generate(node, title);
+
+        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema);
     }
 
     private void setType(JsonNode node, ObjectNode schema){
@@ -49,6 +54,9 @@ public class SchemaGenerator {
                 break;
             case OBJECT:
                 setTypeObject(node, schema);
+                break;
+            case ARRAY:
+                setTypeArray(node, schema);
                 break;
 
         }
@@ -71,6 +79,33 @@ public class SchemaGenerator {
         });
 
         schema.set("properties", properties);
+    }
+
+    private void setTypeArray(JsonNode node, ObjectNode schema){
+
+        schema.put("type","array");
+
+        if(node.isEmpty())
+            return;
+
+        boolean allSame = true;
+        JsonNode firstField = node.get(0);
+
+        for(JsonNode field : node){
+            if(field.getNodeType() != firstField.getNodeType()){
+                allSame = false;
+                break;
+            }
+        }
+
+        if(allSame){
+            ObjectNode items = objectMapper.createObjectNode();
+            setType(firstField, items);
+            schema.set("items", items);
+
+        }else{
+            schema.put("items", true);
+        }
     }
 
     private void SetTypeNumber(JsonNode node, ObjectNode schema){

@@ -1,0 +1,15 @@
+{
+    "id": 1,
+    "tags":["val1", "val2", "val3", 1],
+    "username": "jan_kowalski",
+    "email": "jan@example.com",
+    "age": 30,
+    "balance": 1250.75,
+    "active": true,
+    "nickname": null,
+    "address": {
+      "city": "Warszawa",
+      "zip": "00-001",
+      "verified": false
+  }
+}
