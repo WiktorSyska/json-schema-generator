@@ -1,10 +1,8 @@
 package com.example.jsonschemagenerator.generator;
 
 import com.example.jsonschemagenerator.generator.dateValidator.DateValidator;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.example.jsonschemagenerator.json.*;
+
 
 public class SchemaGenerator {
 
@@ -17,16 +15,16 @@ public class SchemaGenerator {
         this.dateValidator = new DateValidator();
     }
 
-    public ObjectNode generate(JsonNode node, String title){
+    public JsonObject generate(JsonValue node, String title){
         if(node == null){
             throw new IllegalArgumentException("Węzeł JSON nie może być null");
         }
 
-        ObjectNode schema = objectMapper.createObjectNode();
-        schema.put("$schema", SCHEMA_VERSION);
+        JsonObject schema = new JsonObject();
+        schema.put("$schema", new JsonString(SCHEMA_VERSION));
 
         if(title != null && !title.isBlank()){
-            schema.put("title",title);
+            schema.put("title",new JsonString(title));
         }
 
         setType(node, schema);
@@ -34,98 +32,96 @@ public class SchemaGenerator {
         return schema;
     }
 
-    public String generatePretty(JsonNode node, String title) throws JsonProcessingException {
-        ObjectNode schema = generate(node, title);
-
-        return objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema);
+    public String generateString(JsonValue node){
+        JsonObject schema =  generate(node,null);
+        ObjectMapper mapper = new ObjectMapper();
+        return mapper.writeValueAsString(schema);
     }
 
-    private void setType(JsonNode node, ObjectNode schema){
 
-        switch (node.getNodeType()){
+    private void setType(JsonValue node, JsonObject schema){
+
+        switch (node.getType()){
             case STRING:
-                setStringDetectFormat(node, schema);
+                setStringDetectFormat((JsonString) node, schema);
                 break;
             case NUMBER:
-                SetTypeNumber(node,schema);
+                SetTypeNumber((JsonNumber) node,schema);
                 break;
             case BOOLEAN:
-                schema.put("type", "boolean");
+                schema.put("type", new JsonString("boolean"));
                 break;
             case NULL:
-                schema.put("type","null");
+                schema.put("type",new JsonString("null"));
                 break;
             case OBJECT:
-                setTypeObject(node, schema);
+                setTypeObject((JsonObject) node, schema);
                 break;
             case ARRAY:
-                setTypeArray(node, schema);
+                setTypeArray((JsonArray) node, schema);
                 break;
 
 
         }
     }
 
-    private void setStringDetectFormat(JsonNode node, ObjectNode schema){
+    private void setStringDetectFormat(JsonString node, JsonObject schema){
 
-        schema.put("type","string");
-        String value = node.textValue();
+        schema.put("type",new JsonString("string"));
+        String value = node.getValue();
 
-       dateValidator.detectFormat(value).ifPresent(format -> schema.put("format", format));
+       dateValidator.detectFormat(value).ifPresent(format -> schema.put("format", new JsonString(format)));
 
     }
 
-    private void setTypeObject(JsonNode node, ObjectNode schema){
+    private void setTypeObject(JsonObject node, JsonObject schema){
 
-        schema.put("type", "object");
+        schema.put("type", new JsonString("object"));
 
-        ObjectNode properties = objectMapper.createObjectNode();
+        JsonObject properties = new JsonObject();
 
-        node.fields().forEachRemaining(field ->{
-            String fieldName = field.getKey();
-            JsonNode fieldValue = field.getValue();
-
-            ObjectNode fieldSchema = objectMapper.createObjectNode();
+        node.getFields().forEach((fieldName, fieldValue) ->{
+            JsonObject fieldSchema = new JsonObject();
             setType(fieldValue, fieldSchema);
-
-            properties.set(fieldName, fieldSchema);
+            properties.put(fieldName, fieldSchema);
         });
 
-        schema.set("properties", properties);
+        schema.put("properties", properties);
     }
 
-    private void setTypeArray(JsonNode node, ObjectNode schema){
+    private void setTypeArray(JsonArray node, JsonObject schema){
 
-        schema.put("type","array");
+        schema.put("type",new JsonString("array"));
 
         if(node.isEmpty())
             return;
 
         boolean allSame = true;
-        JsonNode firstField = node.get(0);
+        JsonValue firstField = node.get(0);
 
-        for(JsonNode field : node){
-            if(field.getNodeType() != firstField.getNodeType()){
+        for(int i = 0; i < node.size(); i++){
+            if(node .get(i).getType() != firstField.getType()){
                 allSame = false;
                 break;
             }
         }
 
+
         if(allSame){
-            ObjectNode items = objectMapper.createObjectNode();
+            JsonObject items = new JsonObject();
             setType(firstField, items);
-            schema.set("items", items);
+            schema.put("items", items);
 
         }else{
-            schema.put("items", true);
+            schema.put("items", new JsonBoolean(true));
         }
     }
 
-    private void SetTypeNumber(JsonNode node, ObjectNode schema){
-        if(node.isIntegralNumber()){
-            schema.put("type","integer");
+    private void SetTypeNumber(JsonNumber node, JsonObject schema){
+        if(node.isIntegral()){
+            schema.put("type",new JsonString("integer"));
         }else {
-            schema.put("type","number");
+            schema.put("type",new JsonString("number"));
         }
     }
 }

@@ -14,7 +14,9 @@ public class JsonObject extends  JsonValue{
     public JsonValue getValue (String key){
         return fields.get(key);
     }
-
+    public Map<String, JsonValue> getFields() {
+        return fields;
+    }
     public boolean isEmpty(){
         return fields.isEmpty();
     }
