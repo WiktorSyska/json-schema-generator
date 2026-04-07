@@ -1,0 +1,10 @@
+{
+  "id": 1,
+  "age": 30,
+  "balance": 1250.75,
+  "temperature": -15,
+  "username": "jan_kowalski",
+  "email": "jan@example.com",
+  "city": "Warszawa",
+  "zip": "00-001"
+}
