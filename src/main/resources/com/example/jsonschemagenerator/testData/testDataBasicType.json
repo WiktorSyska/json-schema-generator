@@ -6,5 +6,9 @@
   "username": "jan_kowalski",
   "email": "jan@example.com",
   "city": "Warszawa",
-  "zip": "00-001"
+  "zip": "00-001",
+  "address": {
+    "city": "Warszawa",
+    "zip": "00-001"
+  }
 }
