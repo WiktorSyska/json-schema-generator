@@ -1,13 +1,7 @@
 package com.example.jsonschemagenerator.parser;
 
-import com.example.jsonschemagenerator.json.JsonNumber;
-import com.example.jsonschemagenerator.json.JsonObject;
-import com.example.jsonschemagenerator.json.JsonString;
-import com.example.jsonschemagenerator.json.JsonValue;
+import com.example.jsonschemagenerator.json.*;
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class JsonParser {
     private String input;
@@ -36,6 +30,13 @@ public class JsonParser {
                 return parseObject();
             case '"':
                 return parseString();
+            case '[':
+                return parseArray();
+            case 't', 'f':
+                return parseBool();
+            case 'n':
+                return parseNull();
+                    
             default:
                 if (c == '-' || Character.isDigit(c)) {
                     return parseNumber();
@@ -44,6 +45,54 @@ public class JsonParser {
 
         }
 
+    }
+
+    private JsonValue parseNull() throws JsonParserException {
+        if(input.startsWith("null", position)){
+            position += 4;
+            return JsonNull.INSTANCE;
+        }
+
+        throw new JsonParserException("Oczekiwano null na pozycji " + position);
+    }
+
+    private JsonValue parseBool() throws JsonParserException {
+
+        if(input.startsWith("true", position)){
+            position += 4;
+            return new JsonBoolean(true);
+        }
+
+        if(input.startsWith("false", position)){
+            position += 5;
+            return new JsonBoolean(false);
+        }
+
+        throw new JsonParserException("Oczekiwano true lub false na pozycji" + position);
+    }
+
+    private JsonValue parseArray() throws JsonParserException, JsonParseException {
+        isMatching('[');
+
+        JsonArray array = new JsonArray();
+        skipWhiteSpace();
+
+        if(lookUp() == ']'){
+            position++;
+            return array;
+        }
+
+        while(true){
+            array.add(parseValue());
+            skipWhiteSpace();
+
+            if(lookUp() != ',')
+                break;
+
+            position++;
+        }
+        isMatching(']');
+        return array;
     }
 
     private JsonNumber parseNumber() {

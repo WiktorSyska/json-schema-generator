@@ -2,6 +2,7 @@
   "id": 1,
   "age": 30,
   "balance": 1250.75,
+  "tags":["val1", "val2", "val3", 1],
   "temperature": -15,
   "username": "jan_kowalski",
   "email": "jan@example.com",
