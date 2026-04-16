@@ -18,27 +18,23 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
 import java.util.List;
 
 public class HelloController {
 
-    @FXML
-    private Label fileNameLabel;
-
-    @FXML
-    private Label statusLabel;
-
-    @FXML
-    private TextArea schemaOutput;
+    @FXML private Label fileNameLabel;
+    @FXML private Label statusLabel;
+    @FXML private TextArea schemaOutput;
+    @FXML private TextArea validationOutput;
 
     private final JsonFileLoader fileLoader = new JsonFileLoader();
     private final JsonParser jsonParser = new JsonParser();
     private final SchemaGenerator schemaGenerator = new SchemaGenerator();
-    private final JsonSchemaValidator  jsonSchemaValidator = new JsonSchemaValidator();
+    private final JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
 
     private File loadedFile;
     private String loadedContent;
+    private JsonObject currentSchema;
 
     @FXML
     protected void onLoadFile() {
@@ -49,9 +45,7 @@ public class HelloController {
         );
 
         File file = fileChooser.showOpenDialog(schemaOutput.getScene().getWindow());
-        if (file == null) {
-            return;
-        }
+        if (file == null) return;
 
         try {
             loadedContent = fileLoader.loadFile(file);
@@ -59,6 +53,8 @@ public class HelloController {
             fileNameLabel.setText(file.getName());
             setStatus("Plik wczytany pomyślnie.", false);
             schemaOutput.clear();
+            validationOutput.clear();
+            currentSchema = null;
         } catch (JsonLoadException e) {
             setStatus("Błąd ładowania: " + e.getMessage(), true);
             loadedFile = null;
@@ -75,32 +71,60 @@ public class HelloController {
 
         try {
             JsonValue parsed = jsonParser.parse(loadedContent);
-            String schema = schemaGenerator.generateString(parsed);
-            schemaOutput.setText(schema);
+            currentSchema = schemaGenerator.generate(parsed, "");
+            String prettySchema = schemaGenerator.generatePrettyString(parsed);
+            schemaOutput.setText(prettySchema);
+            validationOutput.clear();
             setStatus("Schemat wygenerowany.", false);
-
-            JsonObject parsedSchema = schemaGenerator.generate(parsed,"");
-
-            List<String> validationErrors = jsonSchemaValidator.validate(parsedSchema, parsed);
-
-
-            if(validationErrors.isEmpty()) {
-                System.out.println("Zgodne z danymi wejściowymi");
-            }else{
-                for(String error : validationErrors) {
-                    System.out.println(error);
-                }
-            }
-
-            System.out.println("WALIDACJA OUTPUT:");
-
-
-
-
         } catch (JsonParserException e) {
             setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
         } catch (JsonParseException e) {
             setStatus("Błąd struktury JSON: " + e.getMessage(), true);
+        }
+    }
+
+    @FXML
+    protected void onValidate() {
+        if (currentSchema == null) {
+            setStatus("Najpierw wygeneruj schemat!", true);
+            return;
+        }
+
+        FileChooser fileChooser = new FileChooser();
+        fileChooser.setTitle("Wybierz plik JSON do walidacji");
+        fileChooser.getExtensionFilters().add(
+                new FileChooser.ExtensionFilter("Pliki JSON", "*.json")
+        );
+        if (loadedFile != null) {
+            fileChooser.setInitialDirectory(loadedFile.getParentFile());
+        }
+
+        File file = fileChooser.showOpenDialog(schemaOutput.getScene().getWindow());
+        if (file == null) return;
+
+        try {
+            String content = fileLoader.loadFile(file);
+            JsonValue parsed = jsonParser.parse(content);
+
+            List<String> errors = jsonSchemaValidator.validate(currentSchema, parsed);
+
+            if (errors.isEmpty()) {
+                validationOutput.setText("✓ Plik '" + file.getName() + "' jest zgodny ze schematem.");
+                setStatus("Walidacja OK: " + file.getName(), false);
+            } else {
+                StringBuilder sb = new StringBuilder();
+                sb.append("✗ Plik '").append(file.getName()).append("' — znaleziono ")
+                        .append(errors.size()).append(" błąd(ów):\n\n");
+                for (int i = 0; i < errors.size(); i++) {
+                    sb.append(i + 1).append(". ").append(errors.get(i)).append('\n');
+                }
+                validationOutput.setText(sb.toString());
+                setStatus("Walidacja: " + errors.size() + " błąd(ów) w " + file.getName(), true);
+            }
+        } catch (JsonLoadException e) {
+            setStatus("Błąd ładowania: " + e.getMessage(), true);
+        } catch (JsonParserException | JsonParseException e) {
+            setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
         }
     }
 
@@ -127,9 +151,7 @@ public class HelloController {
         }
 
         File saveFile = fileChooser.showSaveDialog(schemaOutput.getScene().getWindow());
-        if (saveFile == null) {
-            return;
-        }
+        if (saveFile == null) return;
 
         try {
             Files.writeString(saveFile.toPath(), schema, StandardCharsets.UTF_8);

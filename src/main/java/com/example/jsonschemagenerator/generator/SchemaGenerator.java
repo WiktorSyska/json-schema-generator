@@ -38,6 +38,15 @@ public class SchemaGenerator {
         return mapper.writeValueAsString(schema);
     }
 
+    public String generatePrettyString(JsonValue node){
+        JsonObject schema = generate(node, null);
+        return objectMapper.writeValueAsPrettyString(schema);
+    }
+
+    public String generatePrettyString(JsonValue node, String title){
+        JsonObject schema = generate(node, title);
+        return objectMapper.writeValueAsPrettyString(schema);
+    }
 
     private void setType(JsonValue node, JsonObject schema){
 
@@ -60,8 +69,6 @@ public class SchemaGenerator {
             case ARRAY:
                 setTypeArray((JsonArray) node, schema);
                 break;
-
-
         }
     }
 
