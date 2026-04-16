@@ -1,0 +1,57 @@
+{
+  "company": "Tech Solutions Sp. z o.o.",
+  "active_projects": 2,
+  "employees": [
+    {
+      "id": 101,
+      "personal_data": {
+        "first_name": "Anna",
+        "last_name": "Nowak",
+        "contacts": {
+          "email": "anna@tech.pl",
+          "phone": "+48 123 456 789"
+        }
+      },
+      "roles": ["Developer", "Team Leader"],
+      "remote_work": true,
+      "equipment": [
+        {
+          "type": "Laptop",
+          "model": "MacBook Pro",
+          "year": 2023
+        },
+        {
+          "type": "Monitor",
+          "model": "Dell UltraSharp",
+          "specs": {
+            "resolution": "4K",
+            "refresh_rate": 60
+          }
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "personal_data": {
+        "first_name": "Piotr",
+        "last_name": "Zieliński",
+        "contacts": null
+      },
+      "roles": ["UI/UX Designer"],
+      "remote_work": false,
+      "equipment": []
+    }
+  ],
+  "location": {
+    "country": "Poland",
+    "city": "Kraków",
+    "coordinates": {
+      "lat": 50.0647,
+      "lng": 19.9450
+    }
+  },
+  "metadata": {
+    "last_audit": "2024-03-15",
+    "version": 1.5
+  }
+}

@@ -1,11 +1,13 @@
 package com.example.jsonschemagenerator;
 
 import com.example.jsonschemagenerator.generator.SchemaGenerator;
+import com.example.jsonschemagenerator.json.JsonObject;
 import com.example.jsonschemagenerator.json.JsonValue;
 import com.example.jsonschemagenerator.loader.JsonFileLoader;
 import com.example.jsonschemagenerator.loader.JsonLoadException;
 import com.example.jsonschemagenerator.parser.JsonParser;
 import com.example.jsonschemagenerator.parser.JsonParserException;
+import com.example.jsonschemagenerator.validator.JsonSchemaValidator;
 import com.fasterxml.jackson.core.JsonParseException;
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -16,6 +18,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 
 public class HelloController {
 
@@ -31,6 +35,7 @@ public class HelloController {
     private final JsonFileLoader fileLoader = new JsonFileLoader();
     private final JsonParser jsonParser = new JsonParser();
     private final SchemaGenerator schemaGenerator = new SchemaGenerator();
+    private final JsonSchemaValidator  jsonSchemaValidator = new JsonSchemaValidator();
 
     private File loadedFile;
     private String loadedContent;
@@ -73,6 +78,25 @@ public class HelloController {
             String schema = schemaGenerator.generateString(parsed);
             schemaOutput.setText(schema);
             setStatus("Schemat wygenerowany.", false);
+
+            JsonObject parsedSchema = schemaGenerator.generate(parsed,"");
+
+            List<String> validationErrors = jsonSchemaValidator.validate(parsedSchema, parsed);
+
+
+            if(validationErrors.isEmpty()) {
+                System.out.println("Zgodne z danymi wejściowymi");
+            }else{
+                for(String error : validationErrors) {
+                    System.out.println(error);
+                }
+            }
+
+            System.out.println("WALIDACJA OUTPUT:");
+
+
+
+
         } catch (JsonParserException e) {
             setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
         } catch (JsonParseException e) {

@@ -1,0 +1,14 @@
+{
+  "type": "object",
+  "properties": {
+    "imie": { "type": "string" },
+    "wiek": { "type": "integer" },
+    "adres": {
+      "type": "object",
+      "properties": {
+        "miasto": { "type": "string" },
+        "kod": { "type": "string" }
+      }
+    }
+  }
+}

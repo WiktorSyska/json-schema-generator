@@ -2,6 +2,7 @@ package com.example.jsonschemagenerator.json;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class JsonObject extends  JsonValue{
 
@@ -23,5 +24,13 @@ public class JsonObject extends  JsonValue{
     @Override
     public Type getType() {
         return Type.OBJECT;
+    }
+
+    public boolean containsKey(String key){
+        return fields.containsKey(key);
+    }
+
+    public Set<String> keySet(){
+        return  fields.keySet();
     }
 }
