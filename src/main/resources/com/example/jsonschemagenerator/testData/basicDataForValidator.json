@@ -1,14 +1,6 @@
 {
-  "type": "object",
-  "properties": {
-    "imie": { "type": "string" },
-    "wiek": { "type": "integer" },
-    "adres": {
-      "type": "object",
-      "properties": {
-        "miasto": { "type": "string" },
-        "kod": { "type": "string" }
-      }
-    }
-  }
+  "id": 1,
+  "date": "2018-11-13",
+  "date-time": "2018-11-13T20:20:39+00:00",
+  "username": "jan_kowalski"
 }
