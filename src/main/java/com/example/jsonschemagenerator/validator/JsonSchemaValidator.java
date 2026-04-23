@@ -36,14 +36,16 @@ public class JsonSchemaValidator {
                 JsonObject properties = (JsonObject) jsonSchema.getValue("properties");
 
                 for(String key : dataObject.keySet()){
+                    String currentPath = path + "." + key;
                     if(properties.containsKey(key)){
                         JsonObject childSchema = (JsonObject) properties.getValue(key);
                         JsonValue childData = dataObject.getValue(key);
 
-                        String childPath = path + "." + key;
-
-                        validateNode(childSchema, childData, childPath, errors);
+                        validateNode(childSchema, childData, currentPath, errors);
+                    }else{
+                        errors.add("Błąd na ["+ currentPath +"] Nieoczekiwane pole " + key);
                     }
+
                 }
             }
         }
