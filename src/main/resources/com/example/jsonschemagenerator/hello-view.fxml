@@ -7,37 +7,30 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="12.0" xmlns:fx="http://javafx.com/fxml"
-      fx:controller="com.example.jsonschemagenerator.HelloController"
-      prefWidth="700" prefHeight="600">
+<VBox prefHeight="600" prefWidth="700" spacing="12.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/25" fx:controller="com.example.jsonschemagenerator.HelloController">
     <padding>
-        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
     </padding>
 
     <!-- Top bar: file info + buttons -->
-    <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Button text="Wczytaj JSON..." onAction="#onLoadFile" mnemonicParsing="false"/>
-        <Label fx:id="fileNameLabel" text="Nie wczytano pliku" style="-fx-text-fill: #666;"/>
-        <HBox HBox.hgrow="ALWAYS"/>
-        <Button text="Generuj schemat" onAction="#onGenerateSchema" mnemonicParsing="false"/>
-        <Button text="Waliduj plik..." onAction="#onValidate" mnemonicParsing="false"/>
-        <Button text="Zapisz schemat..." onAction="#onSaveSchema" mnemonicParsing="false"/>
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Button mnemonicParsing="false" onAction="#onLoadFile" text="Wczytaj JSON..." />
+        <Label fx:id="fileNameLabel" style="-fx-text-fill: #666;" text="Nie wczytano pliku" />
+        <HBox HBox.hgrow="ALWAYS" />
+        <Button mnemonicParsing="false" onAction="#onGenerateSchema" text="Generuj schemat" />
+      <Button mnemonicParsing="false" onAction="#onGenerateSchemaFromMultiple" text="Generuj dla wielu" />
+        <Button mnemonicParsing="false" onAction="#onValidate" text="Waliduj plik..." />
+        <Button mnemonicParsing="false" onAction="#onSaveSchema" text="Zapisz schemat..." />
     </HBox>
 
     <!-- Status label -->
-    <Label fx:id="statusLabel" text="" style="-fx-font-size: 12;" wrapText="true"/>
+    <Label fx:id="statusLabel" style="-fx-font-size: 12;" text="" wrapText="true" />
 
     <!-- Schema output -->
-    <Label text="Wygenerowany JSON Schema:" style="-fx-font-weight: bold;"/>
-    <TextArea fx:id="schemaOutput" editable="false" wrapText="true"
-              promptText="Tutaj pojawi się wygenerowany schemat..."
-              VBox.vgrow="ALWAYS"
-              style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 13;"/>
+    <Label style="-fx-font-weight: bold;" text="Wygenerowany JSON Schema:" />
+    <TextArea fx:id="schemaOutput" editable="false" promptText="Tutaj pojawi się wygenerowany schemat..." style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 13;" wrapText="true" VBox.vgrow="ALWAYS" />
 
     <!-- Validation output -->
-    <Label text="Wynik walidacji:" style="-fx-font-weight: bold;"/>
-    <TextArea fx:id="validationOutput" editable="false" wrapText="true"
-              promptText="Tutaj pojawi się wynik walidacji..."
-              prefRowCount="6"
-              style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12;"/>
+    <Label style="-fx-font-weight: bold;" text="Wynik walidacji:" />
+    <TextArea fx:id="validationOutput" editable="false" prefRowCount="6" promptText="Tutaj pojawi się wynik walidacji..." style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12;" wrapText="true" />
 </VBox>

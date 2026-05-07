@@ -1,6 +1,7 @@
 package com.example.jsonschemagenerator;
 
 import com.example.jsonschemagenerator.generator.SchemaGenerator;
+import com.example.jsonschemagenerator.json.JsonArray;
 import com.example.jsonschemagenerator.json.JsonObject;
 import com.example.jsonschemagenerator.json.JsonValue;
 import com.example.jsonschemagenerator.loader.JsonFileLoader;
@@ -18,6 +19,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 public class HelloController {
@@ -73,6 +75,38 @@ public class HelloController {
             JsonValue parsed = jsonParser.parse(loadedContent);
             currentSchema = schemaGenerator.generate(parsed, "");
             String prettySchema = schemaGenerator.generatePrettyString(parsed);
+            schemaOutput.setText(prettySchema);
+            validationOutput.clear();
+            setStatus("Schemat wygenerowany.", false);
+        } catch (JsonParserException e) {
+            setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
+        } catch (JsonParseException e) {
+            setStatus("Błąd struktury JSON: " + e.getMessage(), true);
+        }
+    }
+
+    @FXML
+    protected void onGenerateSchemaFromMultiple(){
+        if (loadedContent == null) {
+            setStatus("Najpierw wczytaj plik JSON.", true);
+            return;
+        }
+
+        try {
+            JsonValue parsed = jsonParser.parse(loadedContent);
+
+            if(parsed.getType() != JsonValue.Type.ARRAY){
+                setStatus("Błąd: Plik nie zawiera tablicy JSON!",true);
+                return;
+            }
+
+            JsonArray array = (JsonArray) jsonParser.parse(loadedContent);
+            List<JsonValue> nodes = new ArrayList<>();
+            for(int i = 0; i < array.size(); i++) {
+                nodes.add(array.get(i));
+            }
+
+            String prettySchema = schemaGenerator.generatePrettyStringForMultiple(nodes);
             schemaOutput.setText(prettySchema);
             validationOutput.clear();
             setStatus("Schemat wygenerowany.", false);
