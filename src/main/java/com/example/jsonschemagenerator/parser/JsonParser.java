@@ -17,33 +17,54 @@ public class JsonParser {
         return result;
     }
 
+    private int currentLine(){
+        int line = 1;
+        for(int i = 0; i < position; i++){
+            if(input.charAt(i) == '\n')
+                line++;
+        }
+
+        return line;
+    }
+
     private JsonValue parseValue() throws JsonParserException, JsonParseException {
         skipWhiteSpace();
+
+        int line = currentLine();
         if (position >= input.length()) {
             throw new JsonParseException("Json parsing error");
         }
 
         char c = input.charAt(position);
+        JsonValue result;
 
         switch (c) {
             case '{':
-                return parseObject();
+                result = parseObject();
+                break;
             case '"':
-                return parseString();
+                result = parseString();
+                break;
             case '[':
-                return parseArray();
+                result = parseArray();
+                break;
             case 't', 'f':
-                return parseBool();
+                result = parseBool();
+                break;
             case 'n':
-                return parseNull();
-                    
+                result = parseNull();
+                break;
             default:
                 if (c == '-' || Character.isDigit(c)) {
-                    return parseNumber();
+                    result = parseNumber();
+                    break;
                 }
                 throw new JsonParseException("Nieoczekiwany znak");
 
         }
+
+        result.setLineNumber(line);
+        return result;
 
     }
 

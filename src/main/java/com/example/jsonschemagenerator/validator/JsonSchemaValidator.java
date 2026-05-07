@@ -25,7 +25,7 @@ public class JsonSchemaValidator {
             String expectedType = ( (JsonString) jsonSchema.getValue("type")).getValue();
 
             if(!matchType(expectedType, data)){
-                errors.add("Błąd na ["+ path +"] Oczekiwano typu: " + expectedType);
+                errors.add("Błąd na ["+ path +"] linia " + data.getLineNumber() + " Oczekiwano typu: " + expectedType);
                 return;
             }
         }
@@ -38,13 +38,12 @@ public class JsonSchemaValidator {
 
                 for(String key : dataObject.keySet()){
                     String currentPath = path + "." + key;
+                    JsonValue childData = dataObject.getValue(key);
                     if(properties.containsKey(key)){
                         JsonObject childSchema = (JsonObject) properties.getValue(key);
-                        JsonValue childData = dataObject.getValue(key);
-
                         validateNode(childSchema, childData, currentPath, errors);
                     }else{
-                        errors.add("Błąd na ["+ currentPath +"] Nieoczekiwane pole " + key);
+                        errors.add("Błąd na ["+ currentPath +"] linia " + childData.getLineNumber() +  " Nieoczekiwane pole " + key);
                     }
 
                 }
