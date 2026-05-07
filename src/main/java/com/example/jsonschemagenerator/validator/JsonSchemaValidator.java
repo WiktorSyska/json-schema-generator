@@ -79,6 +79,10 @@ public class JsonSchemaValidator {
                 return  data.getType() == JsonValue.Type.NUMBER;
             case "array":
                 return data.getType() == JsonValue.Type.ARRAY;
+            case "null":
+                return data.getType() == JsonValue.Type.NULL;
+            case "boolean":
+                return data.getType() == JsonValue.Type.BOOLEAN;
             default:
                 return  false;
         }
