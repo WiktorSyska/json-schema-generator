@@ -33,6 +33,19 @@ public class JsonSchemaValidator {
         if(data.getType() == JsonValue.Type.OBJECT){
             JsonObject dataObject = (JsonObject) data;
 
+            if(jsonSchema.containsKey("required")){
+                JsonArray required = (JsonArray) jsonSchema.getValue("required");
+
+                for(int i = 0; i < required.size(); i++){
+                    JsonString requiredField = (JsonString) required.get(i);
+                    String expectedKey = requiredField.getValue();
+
+                    if(!dataObject.containsKey(expectedKey)){
+                        errors.add("Błąd na [" + path + "] linia " + data.getLineNumber() + " Oczekiwano typu: " + expectedKey + " jest on wymagany");
+                    }
+                }
+            }
+
             if(jsonSchema.containsKey("properties")){
                 JsonObject properties = (JsonObject) jsonSchema.getValue("properties");
 

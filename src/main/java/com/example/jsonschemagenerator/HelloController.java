@@ -106,6 +106,7 @@ public class HelloController {
                 nodes.add(array.get(i));
             }
 
+            currentSchema = schemaGenerator.generateFromMultiple(nodes, "");
             String prettySchema = schemaGenerator.generatePrettyStringForMultiple(nodes);
             schemaOutput.setText(prettySchema);
             validationOutput.clear();
