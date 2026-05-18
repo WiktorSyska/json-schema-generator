@@ -1,4 +1,4 @@
-package com.example.jsonschemagenerator;
+package com.example.jsonschemagenerator.views.controllers;
 
 import com.example.jsonschemagenerator.generator.SchemaGenerator;
 import com.example.jsonschemagenerator.json.JsonArray;
