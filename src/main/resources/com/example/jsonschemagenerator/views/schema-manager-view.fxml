@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox prefHeight="600.0" prefWidth="800.0" spacing="10.0"
+      xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.jsonschemagenerator.views.controllers.SchemaManagerController">
+    <padding>
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0"/>
+    </padding>
+
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Button fx:id="goBackButton" mnemonicParsing="false" onAction="#onGoBack" text="◀ Powrót"/>
+        <Label style="-fx-font-size: 16; -fx-font-weight: bold;" text="Zarządzanie zapisanymi schematami"/>
+    </HBox>
+
+    <Label fx:id="statusLabel" style="-fx-font-size: 12;" text="" wrapText="true"/>
+
+    <SplitPane dividerPositions="0.3" VBox.vgrow="ALWAYS">
+        <VBox spacing="8.0">
+            <padding><Insets bottom="4.0" left="4.0" right="4.0" top="4.0"/></padding>
+            <Label style="-fx-font-weight: bold;" text="Zapisane schematy:"/>
+            <ListView fx:id="schemaListView" VBox.vgrow="ALWAYS"/>
+        </VBox>
+
+        <VBox spacing="8.0">
+            <padding><Insets bottom="4.0" left="4.0" right="4.0" top="4.0"/></padding>
+            <Label style="-fx-font-weight: bold;" text="Podgląd:"/>
+            <TextArea fx:id="schemaPreviewArea" editable="false"
+                      promptText="Wybierz schemat z listy aby zobaczyć podgląd..."
+                      style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 13;"
+                      VBox.vgrow="ALWAYS"/>
+        </VBox>
+    </SplitPane>
+
+    <HBox alignment="CENTER" spacing="10.0">
+        <Button fx:id="saveCurrentButton" mnemonicParsing="false"
+                onAction="#onSaveCurrent" text="Zapisz aktualny schemat"/>
+        <Button fx:id="loadButton" mnemonicParsing="false" disable="true"
+                onAction="#onLoad" text="Wczytaj do głównego okna"/>
+        <Button fx:id="deleteButton" mnemonicParsing="false" disable="true"
+                onAction="#onDelete" text="Usuń" style="-fx-text-fill: #c0392b;"/>
+    </HBox>
+</VBox>

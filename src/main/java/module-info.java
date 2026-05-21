@@ -13,5 +13,6 @@ module com.example.jsonschemagenerator {
     opens com.example.jsonschemagenerator to javafx.fxml;
     exports com.example.jsonschemagenerator;
     exports com.example.jsonschemagenerator.views.controllers;
+    exports com.example.jsonschemagenerator.views.components;
     opens com.example.jsonschemagenerator.views.controllers to javafx.fxml;
 }

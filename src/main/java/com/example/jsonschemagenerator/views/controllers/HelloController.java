@@ -1,21 +1,28 @@
 package com.example.jsonschemagenerator.views.controllers;
 
+import com.example.jsonschemagenerator.database.RepositoryException;
+import com.example.jsonschemagenerator.database.SchemaRepository;
 import com.example.jsonschemagenerator.generator.SchemaGenerator;
 import com.example.jsonschemagenerator.json.JsonArray;
 import com.example.jsonschemagenerator.json.JsonObject;
 import com.example.jsonschemagenerator.json.JsonValue;
+import com.example.jsonschemagenerator.json.ObjectMapper;
 import com.example.jsonschemagenerator.loader.JsonFileLoader;
 import com.example.jsonschemagenerator.loader.JsonLoadException;
 import com.example.jsonschemagenerator.parser.JsonParser;
 import com.example.jsonschemagenerator.parser.JsonParserException;
 import com.example.jsonschemagenerator.validator.JsonSchemaValidator;
 import com.example.jsonschemagenerator.views.SceneController;
+import com.example.jsonschemagenerator.views.components.JsonTreeBuilder;
+import com.example.jsonschemagenerator.views.components.JsonTreeCell;
+import com.example.jsonschemagenerator.views.components.JsonTreeNode;
 import com.fasterxml.jackson.core.JsonParseException;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TreeView;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -32,16 +39,43 @@ public class HelloController {
     @FXML private TextArea schemaOutput;
     @FXML private TextArea validationOutput;
     @FXML private Button editSchemaButton;
+    @FXML private TreeView<JsonTreeNode> jsonTreeView;
+    @FXML private TreeView<JsonTreeNode> schemaTreeView;
 
     private final JsonFileLoader fileLoader = new JsonFileLoader();
     private final JsonParser jsonParser = new JsonParser();
     private final SchemaGenerator schemaGenerator = new SchemaGenerator();
     private final JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
     private final SceneController sceneController = new SceneController();
+    private final JsonTreeBuilder treeBuilder = new JsonTreeBuilder();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final SchemaRepository schemaRepository = new SchemaRepository();
 
     private File loadedFile;
     private String loadedContent;
     private JsonObject currentSchema;
+
+    @FXML
+    public void initialize() {
+        jsonTreeView.setCellFactory(tv -> new JsonTreeCell());
+        schemaTreeView.setCellFactory(tv -> new JsonTreeCell());
+
+        try {
+            schemaRepository.loadAll();
+        } catch (RepositoryException e) {
+            setStatus("Ostrzeżenie: nie udało się wczytać bazy schematów: " + e.getMessage(), true);
+        }
+    }
+
+
+    public void initWithSchema(JsonObject schema) {
+        if (schema == null) return;
+        this.currentSchema = schema;
+        String pretty = objectMapper.writeValueAsPrettyString(schema);
+        schemaOutput.setText(pretty);
+        schemaTreeView.setRoot(treeBuilder.build(schema, "schema"));
+        setStatus("Wczytano schemat z bazy. Możesz teraz walidować pliki.", false);
+    }
 
     @FXML
     protected void onLoadFile() {
@@ -59,13 +93,21 @@ public class HelloController {
             loadedFile = file;
             fileNameLabel.setText(file.getName());
             setStatus("Plik wczytany pomyślnie.", false);
+
+            // zbuduj drzewko JSON
+            JsonValue parsed = jsonParser.parse(loadedContent);
+            jsonTreeView.setRoot(treeBuilder.build(parsed, file.getName()));
+
             schemaOutput.clear();
+            schemaTreeView.setRoot(null);
             validationOutput.clear();
             currentSchema = null;
         } catch (JsonLoadException e) {
             setStatus("Błąd ładowania: " + e.getMessage(), true);
             loadedFile = null;
             loadedContent = null;
+        } catch (JsonParserException | JsonParseException e) {
+            setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
         }
     }
 
@@ -81,6 +123,7 @@ public class HelloController {
             currentSchema = schemaGenerator.generate(parsed, "");
             String prettySchema = schemaGenerator.generatePrettyString(parsed);
             schemaOutput.setText(prettySchema);
+            schemaTreeView.setRoot(treeBuilder.build(currentSchema, "schema"));
             validationOutput.clear();
             setStatus("Schemat wygenerowany.", false);
         } catch (JsonParserException e) {
@@ -92,6 +135,10 @@ public class HelloController {
 
     @FXML
     protected void onEditSchemaClick() throws IOException {
+        if (currentSchema == null) {
+            setStatus("Najpierw wygeneruj lub wczytaj schemat.", true);
+            return;
+        }
         sceneController.switchToEditSchemaView(
                 new ActionEvent(editSchemaButton, null),
                 currentSchema,
@@ -99,7 +146,15 @@ public class HelloController {
     }
 
     @FXML
-    protected void onGenerateSchemaFromMultiple(){
+    protected void onOpenSchemaManager() throws IOException {
+        sceneController.switchToSchemaManagerView(
+                new ActionEvent(schemaOutput, null),
+                schemaRepository,
+                currentSchema);
+    }
+
+    @FXML
+    protected void onGenerateSchemaFromMultiple() {
         if (loadedContent == null) {
             setStatus("Najpierw wczytaj plik JSON.", true);
             return;
@@ -108,20 +163,21 @@ public class HelloController {
         try {
             JsonValue parsed = jsonParser.parse(loadedContent);
 
-            if(parsed.getType() != JsonValue.Type.ARRAY){
-                setStatus("Błąd: Plik nie zawiera tablicy JSON!",true);
+            if (parsed.getType() != JsonValue.Type.ARRAY) {
+                setStatus("Błąd: Plik nie zawiera tablicy JSON!", true);
                 return;
             }
 
-            JsonArray array = (JsonArray) jsonParser.parse(loadedContent);
+            JsonArray array = (JsonArray) parsed;
             List<JsonValue> nodes = new ArrayList<>();
-            for(int i = 0; i < array.size(); i++) {
+            for (int i = 0; i < array.size(); i++) {
                 nodes.add(array.get(i));
             }
 
             currentSchema = schemaGenerator.generateFromMultiple(nodes, "");
             String prettySchema = schemaGenerator.generatePrettyStringForMultiple(nodes);
             schemaOutput.setText(prettySchema);
+            schemaTreeView.setRoot(treeBuilder.build(currentSchema, "schema"));
             validationOutput.clear();
             setStatus("Schemat wygenerowany.", false);
         } catch (JsonParserException e) {
