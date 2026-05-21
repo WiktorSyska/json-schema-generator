@@ -1,5 +1,6 @@
 package com.example.jsonschemagenerator.validator;
 
+import com.example.jsonschemagenerator.json.JsonArray;
 import com.example.jsonschemagenerator.json.JsonObject;
 import com.example.jsonschemagenerator.json.JsonString;
 import com.example.jsonschemagenerator.json.JsonValue;
@@ -24,7 +25,7 @@ public class JsonSchemaValidator {
             String expectedType = ( (JsonString) jsonSchema.getValue("type")).getValue();
 
             if(!matchType(expectedType, data)){
-                errors.add("Błąd na ["+ path +"] Oczekiwano typu: " + expectedType);
+                errors.add("Błąd na ["+ path +"] linia " + data.getLineNumber() + " Oczekiwano typu: " + expectedType);
                 return;
             }
         }
@@ -32,18 +33,49 @@ public class JsonSchemaValidator {
         if(data.getType() == JsonValue.Type.OBJECT){
             JsonObject dataObject = (JsonObject) data;
 
+            if(jsonSchema.containsKey("required")){
+                JsonArray required = (JsonArray) jsonSchema.getValue("required");
+
+                for(int i = 0; i < required.size(); i++){
+                    JsonString requiredField = (JsonString) required.get(i);
+                    String expectedKey = requiredField.getValue();
+
+                    if(!dataObject.containsKey(expectedKey)){
+                        errors.add("Błąd na [" + path + "] linia " + data.getLineNumber() + " Oczekiwano typu: " + expectedKey + " jest on wymagany");
+                    }
+                }
+            }
+
             if(jsonSchema.containsKey("properties")){
                 JsonObject properties = (JsonObject) jsonSchema.getValue("properties");
 
                 for(String key : dataObject.keySet()){
+                    String currentPath = path + "." + key;
+                    JsonValue childData = dataObject.getValue(key);
                     if(properties.containsKey(key)){
                         JsonObject childSchema = (JsonObject) properties.getValue(key);
-                        JsonValue childData = dataObject.getValue(key);
-
-                        String childPath = path + "." + key;
-
-                        validateNode(childSchema, childData, childPath, errors);
+                        validateNode(childSchema, childData, currentPath, errors);
+                    }else{
+                        errors.add("Błąd na ["+ currentPath +"] linia " + childData.getLineNumber() +  " Nieoczekiwane pole " + key);
                     }
+
+                }
+            }
+        }
+
+        if(data.getType() == JsonValue.Type.ARRAY){
+            JsonArray dataArray = (JsonArray) data;
+
+            if(jsonSchema.containsKey("items")){
+                JsonValue itemsSchema = jsonSchema.getValue("items");
+
+                if(itemsSchema.getType() == JsonValue.Type.BOOLEAN)
+                    return;
+
+                JsonObject itemSchemaObject = (JsonObject) itemsSchema;
+                for(int i = 0; i < dataArray.size(); i++){
+                    String currentPath = path + "[" + i + "]";
+                    validateNode(itemSchemaObject, dataArray.get(i), currentPath, errors);
                 }
             }
         }
@@ -58,6 +90,12 @@ public class JsonSchemaValidator {
             case "number":
             case "integer":
                 return  data.getType() == JsonValue.Type.NUMBER;
+            case "array":
+                return data.getType() == JsonValue.Type.ARRAY;
+            case "null":
+                return data.getType() == JsonValue.Type.NULL;
+            case "boolean":
+                return data.getType() == JsonValue.Type.BOOLEAN;
             default:
                 return  false;
         }

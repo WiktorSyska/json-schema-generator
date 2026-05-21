@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="600" prefWidth="823.0" spacing="12.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jsonschemagenerator.views.controllers.HelloController">
+    <padding>
+        <Insets bottom="16.0" left="16.0" right="16.0" top="16.0" />
+    </padding>
+
+    <!-- Top bar: file info + buttons -->
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Button mnemonicParsing="false" onAction="#onLoadFile" text="Wczytaj JSON..." />
+        <Label fx:id="fileNameLabel" style="-fx-text-fill: #666;" text="Nie wczytano pliku" />
+        <HBox HBox.hgrow="ALWAYS" />
+        <Button mnemonicParsing="false" onAction="#onGenerateSchema" text="Generuj schemat" />
+      <Button mnemonicParsing="false" onAction="#onGenerateSchemaFromMultiple" text="Generuj dla wielu" />
+        <Button mnemonicParsing="false" onAction="#onValidate" text="Waliduj plik..." />
+        <Button mnemonicParsing="false" onAction="#onSaveSchema" text="Zapisz schemat..." />
+      <Button fx:id="editSchemaButton" mnemonicParsing="false" onAction="#onEditSchemaClick" text="Edytuj Schemat" />
+    </HBox>
+
+    <!-- Status label -->
+    <Label fx:id="statusLabel" style="-fx-font-size: 12;" text="" wrapText="true" />
+
+    <!-- Schema output -->
+    <Label style="-fx-font-weight: bold;" text="Wygenerowany JSON Schema:" />
+    <TextArea fx:id="schemaOutput" editable="false" promptText="Tutaj pojawi się wygenerowany schemat..." style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 13;" wrapText="true" VBox.vgrow="ALWAYS" />
+
+    <!-- Validation output -->
+    <Label style="-fx-font-weight: bold;" text="Wynik walidacji:" />
+    <TextArea fx:id="validationOutput" editable="false" prefRowCount="6" promptText="Tutaj pojawi się wynik walidacji..." style="-fx-font-family: 'Consolas', 'Monaco', monospace; -fx-font-size: 12;" wrapText="true" />
+</VBox>

@@ -1,0 +1,29 @@
+[
+  {
+    "id": 101,
+    "typ": "produkt",
+    "nazwa": "Laptop Pro 15",
+    "cena": 4500,
+    "magazyn": {
+      "stan": 15,
+      "lokalizacja": "A1"
+    }
+  },
+  {
+    "id": 102,
+    "typ": "produkt",
+    "nazwa": "Mysz Bezprzewodowa",
+    "cena": 120,
+    "tagi": ["akcesoria", "biuro"]
+  },
+  {
+    "id": 103,
+    "typ": "usługa",
+    "nazwa": "Gwarancja Plus",
+    "opis": "Rozszerzona ochrona na 3 lata"
+  },
+  {
+    "id": 104,
+    "typ": "produkt"
+  }
+]

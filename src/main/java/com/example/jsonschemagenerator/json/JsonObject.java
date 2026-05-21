@@ -12,6 +12,10 @@ public class JsonObject extends  JsonValue{
         fields.put(key, value);
     }
 
+    public void remove(String key){
+        fields.remove(key);
+    }
+
     public JsonValue getValue (String key){
         return fields.get(key);
     }

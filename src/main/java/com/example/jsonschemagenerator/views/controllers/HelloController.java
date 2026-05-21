@@ -1,6 +1,7 @@
-package com.example.jsonschemagenerator;
+package com.example.jsonschemagenerator.views.controllers;
 
 import com.example.jsonschemagenerator.generator.SchemaGenerator;
+import com.example.jsonschemagenerator.json.JsonArray;
 import com.example.jsonschemagenerator.json.JsonObject;
 import com.example.jsonschemagenerator.json.JsonValue;
 import com.example.jsonschemagenerator.loader.JsonFileLoader;
@@ -8,8 +9,11 @@ import com.example.jsonschemagenerator.loader.JsonLoadException;
 import com.example.jsonschemagenerator.parser.JsonParser;
 import com.example.jsonschemagenerator.parser.JsonParserException;
 import com.example.jsonschemagenerator.validator.JsonSchemaValidator;
+import com.example.jsonschemagenerator.views.SceneController;
 import com.fasterxml.jackson.core.JsonParseException;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.stage.FileChooser;
@@ -18,6 +22,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.List;
 
 public class HelloController {
@@ -26,11 +31,13 @@ public class HelloController {
     @FXML private Label statusLabel;
     @FXML private TextArea schemaOutput;
     @FXML private TextArea validationOutput;
+    @FXML private Button editSchemaButton;
 
     private final JsonFileLoader fileLoader = new JsonFileLoader();
     private final JsonParser jsonParser = new JsonParser();
     private final SchemaGenerator schemaGenerator = new SchemaGenerator();
     private final JsonSchemaValidator jsonSchemaValidator = new JsonSchemaValidator();
+    private final SceneController sceneController = new SceneController();
 
     private File loadedFile;
     private String loadedContent;
@@ -73,6 +80,47 @@ public class HelloController {
             JsonValue parsed = jsonParser.parse(loadedContent);
             currentSchema = schemaGenerator.generate(parsed, "");
             String prettySchema = schemaGenerator.generatePrettyString(parsed);
+            schemaOutput.setText(prettySchema);
+            validationOutput.clear();
+            setStatus("Schemat wygenerowany.", false);
+        } catch (JsonParserException e) {
+            setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
+        } catch (JsonParseException e) {
+            setStatus("Błąd struktury JSON: " + e.getMessage(), true);
+        }
+    }
+
+    @FXML
+    protected void onEditSchemaClick() throws IOException {
+        sceneController.switchToEditSchemaView(
+                new ActionEvent(editSchemaButton, null),
+                currentSchema,
+                schemaOutput.getText());
+    }
+
+    @FXML
+    protected void onGenerateSchemaFromMultiple(){
+        if (loadedContent == null) {
+            setStatus("Najpierw wczytaj plik JSON.", true);
+            return;
+        }
+
+        try {
+            JsonValue parsed = jsonParser.parse(loadedContent);
+
+            if(parsed.getType() != JsonValue.Type.ARRAY){
+                setStatus("Błąd: Plik nie zawiera tablicy JSON!",true);
+                return;
+            }
+
+            JsonArray array = (JsonArray) jsonParser.parse(loadedContent);
+            List<JsonValue> nodes = new ArrayList<>();
+            for(int i = 0; i < array.size(); i++) {
+                nodes.add(array.get(i));
+            }
+
+            currentSchema = schemaGenerator.generateFromMultiple(nodes, "");
+            String prettySchema = schemaGenerator.generatePrettyStringForMultiple(nodes);
             schemaOutput.setText(prettySchema);
             validationOutput.clear();
             setStatus("Schemat wygenerowany.", false);
