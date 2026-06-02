@@ -41,10 +41,10 @@ public class EditSchemaViewController {
         if(schema == null || !schema.containsKey("properties"))
             return;
 
-        buildRecursive(schema, "", 0);
+        buildRecursive(schema, "", 0, null);
     }
 
-    private void buildRecursive(JsonObject schemaNode, String pathPrefix, int indent){
+    private void buildRecursive(JsonObject schemaNode, String pathPrefix, int indent, CheckBox parentCheckbox){
 
         if(!schemaNode.containsKey("properties"))
             return;
@@ -61,6 +61,13 @@ public class EditSchemaViewController {
             checkBox.setSelected(currentRequired.contains(fieldName));
             checkBox.setPadding(new Insets(0,0,0, indent * 20));
 
+            if(parentCheckbox != null){
+                checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                    if(newValue)
+                        parentCheckbox.setSelected(true);
+                });
+            }
+
             allCheckboxes.add(Map.entry(checkBox, new FieldEntry(fieldName, schemaNode)));
             checkBoxContainer.getChildren().add(checkBox);
 
@@ -70,7 +77,7 @@ public class EditSchemaViewController {
             JsonObject fs = (JsonObject) fieldSchema;
 
             if(fs.containsKey("properties")){
-                buildRecursive(fs, fullPath, indent + 1);
+                buildRecursive(fs, fullPath, indent + 1, checkBox);
             }
 
             if(fs.containsKey("items")){
@@ -82,7 +89,7 @@ public class EditSchemaViewController {
                         label.setPadding(new Insets(4,0,0,(indent +1) * 20));
                         label.setStyle("-fx-font-style: italic; -fx-text-fill: #7f8c8d;");
                         checkBoxContainer.getChildren().add(label);
-                        buildRecursive(itemSchema, fullPath + "[]", indent + 1);
+                        buildRecursive(itemSchema, fullPath + "[]", indent + 1, checkBox);
                     }
                 }
             }
