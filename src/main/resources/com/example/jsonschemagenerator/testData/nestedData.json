@@ -35,7 +35,10 @@
       "personal_data": {
         "first_name": "Piotr",
         "last_name": "Zieliński",
-        "contacts": null
+        "contacts": {
+          "email": "ann1a@tech.pl",
+          "phone": "+48 223 456 789"
+        }
       },
       "roles": ["UI/UX Designer"],
       "remote_work": false,

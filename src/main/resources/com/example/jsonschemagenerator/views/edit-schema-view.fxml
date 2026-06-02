@@ -1,34 +1,32 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
-
-
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ScrollPane?>
-<AnchorPane prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jsonschemagenerator.views.controllers.EditSchemaViewController">
+
+<AnchorPane prefHeight="693.0" prefWidth="606.0" xmlns="http://javafx.com/javafx/25" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.jsonschemagenerator.views.controllers.EditSchemaViewController">
     <children>
-        <VBox spacing="10" AnchorPane.topAnchor="10" AnchorPane.leftAnchor="10"
-              AnchorPane.rightAnchor="10" AnchorPane.bottomAnchor="10">
+        <VBox spacing="10" AnchorPane.bottomAnchor="10" AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10" AnchorPane.topAnchor="10">
 
             <HBox spacing="10">
-                <Button fx:id="goBackButton" text="Powrót" onAction="#goBackButtonClick"/>
-                <Button fx:id="applyButton" text="Zastosuj zmiany" onAction="#onApplyChanges"/>
+                <Button fx:id="goBackButton" onAction="#goBackButtonClick" text="Powrót" />
+                <Button fx:id="applyButton" onAction="#onApplyChanges" text="Zastosuj zmiany" />
             </HBox>
 
-            <Label text="Zaznacz pola które mają być required:"/>
+            <Label text="Zaznacz pola które mają być required:" />
 
             <ScrollPane fitToWidth="true" prefHeight="200">
                 <content>
-                    <VBox fx:id="checkBoxContainer" spacing="5"/>
+                    <VBox fx:id="checkBoxContainer" spacing="5" />
                 </content>
             </ScrollPane>
 
-            <Label text="Schemat:"/>
-            <TextArea fx:id="schemaEditorArea" prefHeight="200" editable="false"/>
+            <Label text="Schemat:" />
+            <TextArea fx:id="schemaEditorArea" editable="false" prefHeight="386.0" prefWidth="586.0" />
         </VBox>
     </children>
 </AnchorPane>
