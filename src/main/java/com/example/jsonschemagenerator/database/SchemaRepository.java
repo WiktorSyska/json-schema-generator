@@ -28,7 +28,11 @@ public class SchemaRepository {
     private final JsonSchemaValidator validator = new JsonSchemaValidator();
 
     public SchemaRepository() {
-        this(Paths.get(DEFAULT_DIR));
+        this(defaultStorageDir());
+    }
+
+    private static Path defaultStorageDir() {
+        return Paths.get(System.getProperty("user.home"), ".jsonschemagenerator", "schemas");
     }
 
     public SchemaRepository(Path storageDir) {
