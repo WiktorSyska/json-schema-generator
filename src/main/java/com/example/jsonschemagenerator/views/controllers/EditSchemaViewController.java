@@ -10,6 +10,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.io.IOException;
 import java.util.*;
@@ -27,6 +28,11 @@ public class EditSchemaViewController {
     private record FieldEntry(String fieldName, JsonObject parentSchema){};
     private final List<Map.Entry<CheckBox, FieldEntry>> allCheckboxes = new ArrayList<>();
 
+    private Runnable onSchemaUpdated;
+
+    public void setOnSchemaUpdated(Runnable callback){
+        this.onSchemaUpdated = callback;
+    }
 
     public void iniData(JsonObject schema, String prettySchemaText){
         this.schema = schema;
@@ -144,7 +150,12 @@ public class EditSchemaViewController {
 
     @FXML
     protected void goBackButtonClick() throws IOException {
-        sceneController.switchToMainWindow(new ActionEvent(goBackButton, null));
+        if(onSchemaUpdated != null){
+            onSchemaUpdated.run();
+        }
+
+        Stage stage =  (Stage) goBackButton.getScene().getWindow();
+        stage.close();
     }
 
 }

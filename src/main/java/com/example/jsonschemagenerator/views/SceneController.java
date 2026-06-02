@@ -58,19 +58,25 @@ public class SceneController {
         stage.show();
     }
 
-    public void switchToEditSchemaView(ActionEvent event, JsonObject schema, String prettySchemaText) throws IOException {
+    public void switchToEditSchemaView(ActionEvent event, JsonObject schema, String prettySchemaText, Runnable onReturn) throws IOException {
         FXMLLoader loader = new FXMLLoader(getClass().getResource(
                 "/com/example/jsonschemagenerator/views/edit-schema-view.fxml"));
         root = loader.load();
 
         EditSchemaViewController nextController = loader.getController();
         nextController.iniData(schema, prettySchemaText);
+        nextController.setOnSchemaUpdated(onReturn);
 
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.setScene(scene);
-        closeStage(stage);
-        stage.show();
+        Stage editStage = new Stage();
+        editStage.setTitle("Edytuj Schemat");
+        editStage.setScene(new Scene(root));
+
+        editStage.setOnCloseRequest(e ->{
+            if(onReturn != null) {
+                onReturn.run();
+            }
+        });
+        editStage.show();
     }
 
     public void switchToSchemaManagerView(ActionEvent event, SchemaRepository repo, JsonObject currentSchema) throws IOException {
