@@ -142,7 +142,13 @@ public class HelloController {
         sceneController.switchToEditSchemaView(
                 new ActionEvent(editSchemaButton, null),
                 currentSchema,
-                schemaOutput.getText());
+                schemaOutput.getText(),
+                () ->{
+                    schemaOutput.setText(objectMapper.writeValueAsPrettyString(currentSchema));
+                    schemaTreeView.setRoot(treeBuilder.build(currentSchema, "schema"));
+                    setStatus("Schemat zaktualizowany", false);
+                }
+                );
     }
 
     @FXML
