@@ -23,10 +23,10 @@
         <Button mnemonicParsing="false" onAction="#onLoadFile" text="Wczytaj JSON..."/>
         <Label fx:id="fileNameLabel" style="-fx-text-fill: #666;" text="Nie wczytano pliku"/>
         <HBox HBox.hgrow="ALWAYS"/>
-        <Button mnemonicParsing="false" onAction="#onGenerateSchema" text="Generuj schemat"/>
-        <Button mnemonicParsing="false" onAction="#onGenerateSchemaFromMultiple" text="Generuj dla wielu"/>
-        <Button mnemonicParsing="false" onAction="#onValidate" text="Waliduj plik..."/>
-        <Button mnemonicParsing="false" onAction="#onSaveSchema" text="Zapisz schemat..."/>
+        <Button fx:id="generateButton" mnemonicParsing="false" onAction="#onGenerateSchema" text="Generuj schemat"/>
+        <Button fx:id="generateMultipleButton" mnemonicParsing="false" onAction="#onGenerateSchemaFromMultiple" text="Generuj dla wielu"/>
+        <Button fx:id="validateButton" mnemonicParsing="false" onAction="#onValidate" text="Waliduj plik..."/>
+        <Button fx:id="saveSchemaButton" mnemonicParsing="false" onAction="#onSaveSchema" text="Zapisz schemat..."/>
         <Button fx:id="editSchemaButton" mnemonicParsing="false" onAction="#onEditSchemaClick" text="Edytuj schemat"/>
         <Button mnemonicParsing="false" onAction="#onOpenSchemaManager" text="Schematy..."/>
     </HBox>
@@ -40,7 +40,7 @@
         <!-- LEFT: TabPane with JSON tree and Schema tree -->
         <VBox spacing="6.0">
             <padding><Insets bottom="4.0" left="4.0" right="4.0" top="4.0"/></padding>
-            <Label style="-fx-font-weight: bold;" text="Podgląd drzewa:"/>
+            <Label style="-fx-font-weight: bold;" text="Podgląd drzewa (przeciągnij tu plik JSON):"/>
             <TabPane VBox.vgrow="ALWAYS" tabClosingPolicy="UNAVAILABLE">
                 <Tab text="JSON">
                     <TreeView fx:id="jsonTreeView"/>

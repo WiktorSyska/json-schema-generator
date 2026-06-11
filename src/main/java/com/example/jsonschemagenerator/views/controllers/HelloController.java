@@ -23,6 +23,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -38,6 +40,10 @@ public class HelloController {
     @FXML private Label statusLabel;
     @FXML private TextArea schemaOutput;
     @FXML private TextArea validationOutput;
+    @FXML private Button generateButton;
+    @FXML private Button generateMultipleButton;
+    @FXML private Button validateButton;
+    @FXML private Button saveSchemaButton;
     @FXML private Button editSchemaButton;
     @FXML private TreeView<JsonTreeNode> jsonTreeView;
     @FXML private TreeView<JsonTreeNode> schemaTreeView;
@@ -54,11 +60,15 @@ public class HelloController {
     private File loadedFile;
     private String loadedContent;
     private JsonObject currentSchema;
+    private File lastDirectory;
 
     @FXML
     public void initialize() {
         jsonTreeView.setCellFactory(tv -> new JsonTreeCell());
         schemaTreeView.setCellFactory(tv -> new JsonTreeCell());
+
+        setupDragAndDrop();
+        updateButtonsState();
 
         try {
             schemaRepository.loadAll();
@@ -75,6 +85,59 @@ public class HelloController {
         schemaOutput.setText(pretty);
         schemaTreeView.setRoot(treeBuilder.build(schema, "schema"));
         setStatus("Wczytano schemat z bazy. Możesz teraz walidować pliki.", false);
+        updateButtonsState();
+    }
+
+    // === Drag & drop ===
+
+    private void setupDragAndDrop() {
+        jsonTreeView.setOnDragOver(event -> {
+            if (event.getGestureSource() == null && event.getDragboard().hasFiles()) {
+                event.acceptTransferModes(TransferMode.COPY);
+            }
+            event.consume();
+        });
+
+        jsonTreeView.setOnDragDropped(event -> {
+            Dragboard dragboard = event.getDragboard();
+            boolean success = false;
+            if (dragboard.hasFiles()) {
+                loadJsonFile(dragboard.getFiles().get(0));
+                success = true;
+            }
+            event.setDropCompleted(success);
+            event.consume();
+        });
+    }
+
+    // === Wczytywanie pliku (wspólne dla przycisku i drag & drop) ===
+
+    private void loadJsonFile(File file) {
+        try {
+            loadedContent = fileLoader.loadFile(file);
+            loadedFile = file;
+            lastDirectory = file.getParentFile();
+            fileNameLabel.setText(file.getName());
+
+            JsonValue parsed = jsonParser.parse(loadedContent);
+            jsonTreeView.setRoot(treeBuilder.build(parsed, file.getName()));
+
+            validationOutput.clear();
+
+            if (currentSchema != null) {
+                setStatus("Plik wczytany. Schemat został zachowany — możesz walidować.", false);
+            } else {
+                setStatus("Plik wczytany pomyślnie.", false);
+            }
+        } catch (JsonLoadException e) {
+            setStatus("Błąd ładowania: " + e.getMessage(), true);
+            loadedFile = null;
+            loadedContent = null;
+        } catch (JsonParserException | JsonParseException e) {
+            setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
+        } finally {
+            updateButtonsState();
+        }
     }
 
     @FXML
@@ -84,31 +147,12 @@ public class HelloController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Pliki JSON", "*.json")
         );
+        applyLastDirectory(fileChooser);
 
         File file = fileChooser.showOpenDialog(schemaOutput.getScene().getWindow());
         if (file == null) return;
 
-        try {
-            loadedContent = fileLoader.loadFile(file);
-            loadedFile = file;
-            fileNameLabel.setText(file.getName());
-            setStatus("Plik wczytany pomyślnie.", false);
-
-            // zbuduj drzewko JSON
-            JsonValue parsed = jsonParser.parse(loadedContent);
-            jsonTreeView.setRoot(treeBuilder.build(parsed, file.getName()));
-
-            schemaOutput.clear();
-            schemaTreeView.setRoot(null);
-            validationOutput.clear();
-            currentSchema = null;
-        } catch (JsonLoadException e) {
-            setStatus("Błąd ładowania: " + e.getMessage(), true);
-            loadedFile = null;
-            loadedContent = null;
-        } catch (JsonParserException | JsonParseException e) {
-            setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
-        }
+        loadJsonFile(file);
     }
 
     @FXML
@@ -130,6 +174,8 @@ public class HelloController {
             setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
         } catch (JsonParseException e) {
             setStatus("Błąd struktury JSON: " + e.getMessage(), true);
+        } finally {
+            updateButtonsState();
         }
     }
 
@@ -143,12 +189,12 @@ public class HelloController {
                 new ActionEvent(editSchemaButton, null),
                 currentSchema,
                 schemaOutput.getText(),
-                () ->{
+                () -> {
                     schemaOutput.setText(objectMapper.writeValueAsPrettyString(currentSchema));
                     schemaTreeView.setRoot(treeBuilder.build(currentSchema, "schema"));
                     setStatus("Schemat zaktualizowany", false);
                 }
-                );
+        );
     }
 
     @FXML
@@ -190,6 +236,8 @@ public class HelloController {
             setStatus("Błąd parsowania JSON: " + e.getMessage(), true);
         } catch (JsonParseException e) {
             setStatus("Błąd struktury JSON: " + e.getMessage(), true);
+        } finally {
+            updateButtonsState();
         }
     }
 
@@ -205,12 +253,12 @@ public class HelloController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Pliki JSON", "*.json")
         );
-        if (loadedFile != null) {
-            fileChooser.setInitialDirectory(loadedFile.getParentFile());
-        }
+        applyLastDirectory(fileChooser);
 
         File file = fileChooser.showOpenDialog(schemaOutput.getScene().getWindow());
         if (file == null) return;
+
+        lastDirectory = file.getParentFile();
 
         try {
             String content = fileLoader.loadFile(file);
@@ -251,11 +299,11 @@ public class HelloController {
         fileChooser.getExtensionFilters().add(
                 new FileChooser.ExtensionFilter("Pliki JSON", "*.json")
         );
+        applyLastDirectory(fileChooser);
 
         if (loadedFile != null) {
             String baseName = loadedFile.getName().replace(".json", "");
             fileChooser.setInitialFileName(baseName + "-schema.json");
-            fileChooser.setInitialDirectory(loadedFile.getParentFile());
         } else {
             fileChooser.setInitialFileName("schema.json");
         }
@@ -263,11 +311,34 @@ public class HelloController {
         File saveFile = fileChooser.showSaveDialog(schemaOutput.getScene().getWindow());
         if (saveFile == null) return;
 
+        lastDirectory = saveFile.getParentFile();
+
         try {
             Files.writeString(saveFile.toPath(), schema, StandardCharsets.UTF_8);
             setStatus("Schemat zapisany: " + saveFile.getName(), false);
         } catch (IOException e) {
             setStatus("Błąd zapisu: " + e.getMessage(), true);
+        }
+    }
+
+    // === Stan przycisków ===
+
+    private void updateButtonsState() {
+        boolean fileLoaded = loadedContent != null;
+        boolean schemaReady = currentSchema != null;
+
+        generateButton.setDisable(!fileLoaded);
+        generateMultipleButton.setDisable(!fileLoaded);
+        validateButton.setDisable(!schemaReady);
+        editSchemaButton.setDisable(!schemaReady);
+        saveSchemaButton.setDisable(!schemaReady);
+    }
+
+    // === Ostatni katalog ===
+
+    private void applyLastDirectory(FileChooser fileChooser) {
+        if (lastDirectory != null && lastDirectory.isDirectory()) {
+            fileChooser.setInitialDirectory(lastDirectory);
         }
     }
 
