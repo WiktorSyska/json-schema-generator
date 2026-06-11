@@ -1,22 +1,19 @@
 package com.example.jsonschemagenerator.views.controllers;
 
-import com.example.jsonschemagenerator.json.JsonArray;
-import com.example.jsonschemagenerator.json.JsonObject;
-import com.example.jsonschemagenerator.json.JsonString;
-import com.example.jsonschemagenerator.json.ObjectMapper;
+import com.example.jsonschemagenerator.json.*;
 import com.example.jsonschemagenerator.views.SceneController;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class EditSchemaViewController {
 
@@ -25,9 +22,17 @@ public class EditSchemaViewController {
     @FXML private VBox checkBoxContainer;
 
     private final SceneController sceneController = new SceneController();
-    private final Map<String, CheckBox> fieldCheckboxes = new LinkedHashMap<>();
     private final ObjectMapper obbMapper = new ObjectMapper();
     private JsonObject schema;
+
+    private record FieldEntry(String fieldName, JsonObject parentSchema){};
+    private final List<Map.Entry<CheckBox, FieldEntry>> allCheckboxes = new ArrayList<>();
+
+    private Runnable onSchemaUpdated;
+
+    public void setOnSchemaUpdated(Runnable callback){
+        this.onSchemaUpdated = callback;
+    }
 
     public void iniData(JsonObject schema, String prettySchemaText){
         this.schema = schema;
@@ -39,54 +44,118 @@ public class EditSchemaViewController {
 
     private void createCheckboxes(){
         checkBoxContainer.getChildren().clear();
-        fieldCheckboxes.clear();;
-
         if(schema == null || !schema.containsKey("properties"))
             return;
 
-        JsonObject properties = (JsonObject)  schema.getValue("properties");
+        buildRecursive(schema, "", 0, null);
+    }
 
-        Set<String> currentRequired = new HashSet<>();
+    private void buildRecursive(JsonObject schemaNode, String pathPrefix, int indent, CheckBox parentCheckbox){
 
-        if(schema.containsKey("required")){
-            JsonArray required = (JsonArray)  schema.getValue("required");
-            for(int i = 0; i < required.size(); i++){
-                currentRequired.add(((JsonString) required.get(i)).getValue());
-            }
-        }
+        if(!schemaNode.containsKey("properties"))
+            return;
 
-        properties.getFields().forEach((fieldName, fieldValue)->{
-            CheckBox checkBox = new CheckBox(fieldName);
+        JsonObject properties = (JsonObject) schemaNode.getValue("properties");
+
+        Set<String> currentRequired = getRequired(schemaNode);
+
+
+        properties.getFields().forEach((fieldName, fieldSchema)->{
+            String fullPath = pathPrefix.isEmpty() ? fieldName : pathPrefix + "." + fieldName;
+
+            CheckBox checkBox = new CheckBox(fullPath);
             checkBox.setSelected(currentRequired.contains(fieldName));
-            fieldCheckboxes.put(fieldName, checkBox);
+            checkBox.setPadding(new Insets(0,0,0, indent * 20));
+
+            if(parentCheckbox != null){
+                checkBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+                    if(newValue)
+                        parentCheckbox.setSelected(true);
+                });
+            }
+
+            allCheckboxes.add(Map.entry(checkBox, new FieldEntry(fieldName, schemaNode)));
             checkBoxContainer.getChildren().add(checkBox);
+
+            if(fieldSchema.getType() != JsonValue.Type.OBJECT)
+                return;
+
+            JsonObject fs = (JsonObject) fieldSchema;
+
+            if(fs.containsKey("properties")){
+                buildRecursive(fs, fullPath, indent + 1, checkBox);
+            }
+
+            if(fs.containsKey("items")){
+                JsonValue items =  fs.getValue("items");
+                if(items.getType() == JsonValue.Type.OBJECT){
+                    JsonObject itemSchema =  (JsonObject) items;
+                    if(itemSchema.containsKey("properties")){
+                        Label label = new Label(fullPath + "[] ->");
+                        label.setPadding(new Insets(4,0,0,(indent +1) * 20));
+                        label.setStyle("-fx-font-style: italic; -fx-text-fill: #7f8c8d;");
+                        checkBoxContainer.getChildren().add(label);
+                        buildRecursive(itemSchema, fullPath + "[]", indent + 1, checkBox);
+                    }
+                }
+            }
+
         });
     }
+
+    private Set<String> getRequired(JsonObject schemaNode) {
+        Set<String> result = new HashSet<>();
+
+        if(!schemaNode.containsKey("required"))
+            return result;
+
+        JsonArray required = (JsonArray)  schemaNode.getValue("required");
+        for(int i = 0; i < required.size(); i++){
+            result.add(((JsonString) required.get(i)).getValue());
+        }
+        return result;
+    }
+
 
     @FXML
     protected void onApplyChanges(){
         if(schema == null)
             return;
 
-        JsonArray newRequired = new JsonArray();
-        fieldCheckboxes.forEach((fieldName, checkbox) ->{
-            if(checkbox.isSelected()){
-                newRequired.add(new JsonString(fieldName));
+        Map<JsonObject, JsonArray> requiredBySchema = new LinkedHashMap<>();
+
+
+        allCheckboxes.forEach(entry ->{
+            if(entry.getKey().isSelected()){
+                requiredBySchema
+                        .computeIfAbsent(entry.getValue().parentSchema(), k -> new JsonArray())
+                        .add(new JsonString(entry.getValue().fieldName()));
             }
         });
 
-        if(!newRequired.isEmpty()){
-            schema.put("required", newRequired);
-        }else {
-            schema.remove("required");
-        }
+        Set<JsonObject> allParents = new LinkedHashSet<>();
+        allCheckboxes.forEach(e -> allParents.add(e.getValue().parentSchema()));
+
+        allParents.forEach(parent ->{
+            JsonArray required = requiredBySchema.get(parent);
+            if(required != null && !required.isEmpty()){
+                parent.put("required", required);
+            }else {
+                parent.remove("required");
+            }
+        });
 
         schemaEditorArea.setText(obbMapper.writeValueAsPrettyString(schema));
     }
 
     @FXML
     protected void goBackButtonClick() throws IOException {
-        sceneController.switchToMainWindow(new ActionEvent(goBackButton, null));
+        if(onSchemaUpdated != null){
+            onSchemaUpdated.run();
+        }
+
+        Stage stage =  (Stage) goBackButton.getScene().getWindow();
+        stage.close();
     }
 
 }
