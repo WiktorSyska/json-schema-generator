@@ -2,6 +2,7 @@
 # JSON Schema Generator
 
 Aplikacja desktopowa napisana w JavaFX, umożliwiająca automatyczne generowanie schematów JSON Schema (specyfikacja draft 2020-12) na podstawie przykładowych dokumentów JSON, a następnie wykorzystanie tych schematów do walidacji innych dokumentów.
+Pełna dokumentacja projektu (część teoretyczna, architektura, diagramy UML, instrukcja użytkowania, testy) dostępna jest w pliku [`docs/Dokumentacja.pdf`](docs/Dokumentacja.pdf).
 
 ## Funkcjonalności
 
